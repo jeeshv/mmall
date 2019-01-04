@@ -16,12 +16,12 @@ import javax.servlet.http.HttpSession;
  * Created by Administrator on 2018/10/6.
  */
 @RestController
-@RequestMapping("/manage/user")
+@RequestMapping(value = "/manage/user", produces= {"application/json;charset=UTF-8"})
 public class UserManageController {
     @Autowired
     private IUserService iUserService;
 
-    @RequestMapping(value="login.do",method = RequestMethod.POST)
+    @RequestMapping(value="login.do",method = RequestMethod.GET)
     @ResponseBody
     public ServerResponse<User> login(String username, String password, HttpSession session){
         ServerResponse<User> response = iUserService.login(username,password);

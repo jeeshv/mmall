@@ -7,9 +7,9 @@ import com.mmall.dao.UserMapper;
 import com.mmall.pojo.User;
 import com.mmall.service.IUserService;
 import com.mmall.util.MD5Util;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import java.util.UUID;
 
@@ -203,6 +203,15 @@ public class UserServiceImpl implements IUserService {
         return ServerResponse.createByError();
     }
 
-
-
+    /**
+     * 根据用户名查询用户信息
+     * @param username
+     * @return
+     */
+    public User isUserExists(String username){
+        if(StringUtils.isEmpty(username)) return null;
+        User user = userMapper.selectUserByUsername(username);
+        if(user != null)user.setPassword(org.apache.commons.lang3.StringUtils.EMPTY);
+        return user;
+    }
 }

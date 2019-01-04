@@ -3,15 +3,17 @@ package com.mmall.controller.portal;
 import com.mmall.common.Const;
 import com.mmall.common.ResponseCode;
 import com.mmall.common.ServerResponse;
+import com.mmall.controller.ControllerTools;
 import com.mmall.pojo.User;
+import com.mmall.security.JWTUtil;
 import com.mmall.service.IUserService;
-import com.sun.corba.se.spi.activation.Server;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 /**
@@ -30,29 +32,28 @@ public class UserController {
      * 用户登录
      * @param username
      * @param password
-     * @param session
      * @return
      */
-    @RequestMapping(value = "login.do",method = RequestMethod.POST)
+    @RequestMapping(value = "login.do",method = RequestMethod.GET)
     @ResponseBody
-    public ServerResponse<User> login(String username, String password, HttpSession session){
+    public ServerResponse<User> login(String username, String password,ServletResponse servletResponse){
         ServerResponse<User> response = iUserService.login(username,password);
-        if(response.isSuccess()){
-            session.setAttribute(Const.CURRENT_USER,response.getData());
-        }
+        String token = JWTUtil.sign(username, password);
+        HttpServletResponse httpRes = (HttpServletResponse) servletResponse;
+        httpRes.setHeader("token",token);
         return response;
     }
 
-    @RequestMapping(value = "logout.do",method = RequestMethod.POST)
+    @RequestMapping(value = "logout.do",method = RequestMethod.GET)
     @ResponseBody
-    public ServerResponse<String> logout(HttpSession session){
-        session.removeAttribute(Const.CURRENT_USER);
+    public ServerResponse<String> logout(@RequestHeader HttpHeaders headers){
+        User user = controllerTools.getUser(headers);
         return ServerResponse.createBySuccess();
     }
 
     @RequestMapping(value = "register.do",method = RequestMethod.POST)
     @ResponseBody
-    public ServerResponse<String> register(User user){
+    public ServerResponse<String> register(@RequestBody  User user){
         return iUserService.register(user);
     }
 
@@ -63,11 +64,12 @@ public class UserController {
         return iUserService.checkValid(str,type);
     }
 
-
-    @RequestMapping(value = "get_user_info.do",method = RequestMethod.POST)
+    @Autowired
+    ControllerTools controllerTools;
+    @RequestMapping(value = "get_user_info.do",method = RequestMethod.GET)
     @ResponseBody
-    public ServerResponse<User> getUserInfo(HttpSession session){
-        User user = (User) session.getAttribute(Const.CURRENT_USER);
+    public ServerResponse<User> getUserInfo(@RequestHeader HttpHeaders headers){
+        User user = controllerTools.getUser(headers);
         if(user != null){
             return ServerResponse.createBySuccess(user);
         }
